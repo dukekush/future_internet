@@ -1,0 +1,62 @@
+Comandos primera parte:
+
+$ sudo wireshark &
+
+In wireshark (Filter) of and apply
+
+In Wireshark, click Capture, then Interfaces, then select Start on the loopback interface (lo).
+
+$ sudo mn
+
+mininet> help
+
+mininet> nodes
+
+mininet> net
+
+mininet> dump
+
+mininet> dpctl dump-flows
+
+mininet> h1 ifconfig -a
+
+mininet> s1 ifconfig -a
+
+mininet> h1 ps -a
+
+mininet> s1 ps -a
+
+mininet> h1 ping -c 1 h2
+
+mininet> pingall
+
+mininet> exit
+
+$ sudo mn -c
+
+
+
+Examples:
+$ sudo mn --link tc,bw=10,delay=10ms
+ mininet> iperf
+ ...
+ mininet> h1 ping -c10 h2
+
+Examples xterm
+$ sudo mn -x
+
+In the xterm labeled “switch: s1 (root)”, run:
+# dpctl dump-flows tcp:127.0.0.1:6634
+
+Now, in the xterm labeled “host: h1”, run:
+# ping 10.0.0.2
+
+$ sudo mn --test pingall --topo single,3
+
+$ sudo mn --topo minimal
+
+$ sudo mn --topo linear,4
+
+$ sudo mn --topo tree,depth=2,fanout=2
+
+
