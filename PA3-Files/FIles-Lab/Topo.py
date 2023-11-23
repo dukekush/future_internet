@@ -26,7 +26,7 @@ class P32( Topo ):
             sconfig = {'dpid': "%016x" % (i)}
             sn = self.addSwitch('s%s' % i,**sconfig)
             if i<7:
-                Host = self.addHost( 'h%s' % i, ip="10.0.0.%s/24" %i, mac="00:00:00:00:00:0%s" %i )
+                Host = self.addHost('h%s' % i, ip="10.0.0.%s/24" %i, mac="00:00:00:00:00:0%s" %i )
                 hosts['h%s' % i] = Host
             switches['s%s' % i] = sn
             

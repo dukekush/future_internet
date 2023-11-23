@@ -33,11 +33,42 @@ class CustomSlice (EventMixin):
 		'''
 
 		self.portmap = { 
-                        ('00-00-00-00-00-01', EthAddr('00:00:00:00:00:01'),
-                         EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-04',
+						# H1 <--> VIDEO SERVER
+                        ('00-00-00-00-00-01', EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-04',
+						('00-00-00-00-00-04', EthAddr('00:00:00:00:00:01'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-07',
                         
-                        """ Please add your logic here """
-                        
+						('00-00-00-00-00-07', EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:01'), 200): '00-00-00-00-00-04',
+						('00-00-00-00-00-04', EthAddr('00:00:00:00:00:05'), EthAddr('00:00:00:00:00:01'), 200): '00-00-00-00-00-01',
+						   
+						# H2 <--> HTTP SERVER
+						('00-00-00-00-00-02', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-05',
+						('00-00-00-00-00-05', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-07',
+
+						('00-00-00-00-00-07', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:02'), 80): '00-00-00-00-00-05',
+						('00-00-00-00-00-05', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:02'), 80): '00-00-00-00-00-02',
+
+						# H2 <--> VIDEO SERVER
+						('00-00-00-00-00-02', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-01',
+						('00-00-00-00-00-01', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-04',
+						('00-00-00-00-00-04', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-07',
+
+						('00-00-00-00-00-07', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-04',
+						('00-00-00-00-00-04', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-01',
+						('00-00-00-00-00-01', EthAddr('00:00:00:00:00:02'), EthAddr('00:00:00:00:00:05'), 200): '00-00-00-00-00-02',
+
+						# H3 <--> HTTP SERVER
+						('00-00-00-00-00-03', EthAddr('00:00:00:00:00:03'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-06',
+						('00-00-00-00-00-06', EthAddr('00:00:00:00:00:03'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-07',
+
+						('00-00-00-00-00-07', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:03'), 80): '00-00-00-00-00-06',
+						('00-00-00-00-00-06', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:03'), 80): '00-00-00-00-00-03',
+
+						# H4 <--> HTTP SERVER
+						('00-00-00-00-00-03', EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-06',
+						('00-00-00-00-00-06', EthAddr('00:00:00:00:00:04'), EthAddr('00:00:00:00:00:06'), 80): '00-00-00-00-00-07',
+
+						('00-00-00-00-00-07', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:04'), 80): '00-00-00-00-00-06',
+						('00-00-00-00-00-06', EthAddr('00:00:00:00:00:06'), EthAddr('00:00:00:00:00:04'), 80): '00-00-00-00-00-03',
                         }
 		
 		# Logic according to diagram in assignment PDF
@@ -84,7 +115,7 @@ class CustomSlice (EventMixin):
 			msg.in_port = event.port
 			event.connection.send(msg)
 
-		def install_fwdrule(event,packet,outport):
+		def install_fwdrule(event, packet, outport):
 			msg = of.ofp_flow_mod()
 			msg.idle_timeout = 10
 			msg.hard_timeout = 30
@@ -96,24 +127,36 @@ class CustomSlice (EventMixin):
 
 		
 		def forward (message = None):
-            		this_dpid = dpid_to_str(event.dpid)
+			this_dpid = dpid_to_str(event.dpid)
 
-            		if packet.dst.is_multicast:
-                		flood()
-                	return
-           		else:
-                		log.debug("Got unicast packet for %s at %s (input port %d):",
-                          	packet.dst, dpid_to_str(event.dpid), event.port)
+			if packet.dst.is_multicast:
+				flood()
+				return
+			else:
+				log.debug("Got unicast packet for %s at %s (input port %d):",
+					packet.dst, dpid_to_str(event.dpid), event.port)
 
-                	try:
-                   		""" Add your logic here """"
-                    
+			try:
+				""" Add your logic here """
+				if self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)):
+					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)]
 
-                	except AttributeError:
-                    		log.debug("packet type has no transport ports, flooding")
+				elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)):
+					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)]
 
-                    	# flood and install the flow table entry for the flood
-                    	install_fwdrule(event,packet,of.OFPP_FLOOD)
+				elif self.portmap.get((this_dpid, packet.src, packet.dst, 0)):
+					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, 0)]
+					
+				else:
+					raise AttributeError
+
+				install_fwdrule(event, packet, self.adjacency[this_dpid][new_dpid])
+
+			except AttributeError:
+				log.debug("packet type has no transport ports, flooding")
+
+				# flood and install the flow table entry for the flood
+				install_fwdrule(event, packet, of.OFPP_FLOOD)
 
 		forward()
 
