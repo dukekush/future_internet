@@ -137,20 +137,29 @@ class CustomSlice (EventMixin):
 					packet.dst, dpid_to_str(event.dpid), event.port)
 
 			try:
-				""" Add your logic here """
-				if self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)):
-					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)]
+				if packet.type == 2054:
+					log.debug(f"Got ARP on the switch: {this_dpid}")
+					flood()
 
-				elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)):
-					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)]
-
-				elif self.portmap.get((this_dpid, packet.src, packet.dst, 0)):
-					new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, 0)]
+				elif packet.payload.protocol == 1:
+					log.debug("ICMP packet")
+					flood()
 					
 				else:
-					raise AttributeError
+					if self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)]
 
-				install_fwdrule(event, packet, self.adjacency[this_dpid][new_dpid])
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)]
+
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, 0)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, 0)]
+
+					else:
+						raise AttributeError
+				
+
+					install_fwdrule(event, packet, self.adjacency[this_dpid][new_dpid])
 
 			except AttributeError:
 				log.debug("packet type has no transport ports, flooding")
