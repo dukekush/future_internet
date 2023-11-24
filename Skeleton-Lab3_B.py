@@ -151,7 +151,7 @@ class CustomSlice(EventMixin):
                           packet.dst, dpid_to_str(event.dpid), event.port)
 
                 try:
-                    """ Add your logic here """
+                    # """ Add your logic here """
                     # IP
                     if packet.type == 2048:
                         # TCP
