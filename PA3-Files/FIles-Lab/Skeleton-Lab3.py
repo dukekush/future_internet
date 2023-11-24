@@ -152,6 +152,12 @@ class CustomSlice (EventMixin):
 					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)):
 						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)]
 
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('udp').srcport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('udp').srcport)]
+
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('udp').dstport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('udp').dstport)]
+
 					else:
 						raise AttributeError
 				
