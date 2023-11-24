@@ -137,34 +137,37 @@ class CustomSlice (EventMixin):
 					packet.dst, dpid_to_str(event.dpid), event.port)
 
 			try:
-				if tcpp:
-					if self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.srcport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.srcport)]
-						out = self.adjacency[this_dpid][new_dpid]
+				if packet.type == 2048:
+					if tcpp:
+						if self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.srcport)):
+							new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.srcport)]
+							out = self.adjacency[this_dpid][new_dpid]
 
-					elif self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.dstport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.dstport)]
-						out = self.adjacency[this_dpid][new_dpid]
+						elif self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.dstport)):
+							new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.dstport)]
+							out = self.adjacency[this_dpid][new_dpid]
 
-					else:
-						out = self.hostmap_portmap[str(packet.dst)]
+						else:
+							out = self.hostmap_portmap[str(packet.dst)]
+						
+						install_fwdrule(event, packet, out)
 					
-					install_fwdrule(event, packet, out)
-				
-				elif udpp:
-					if self.portmap.get((this_dpid, packet.src, packet.dst, udpp.srcport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.srcport)]
-						out = self.adjacency[this_dpid][new_dpid]
+					elif udpp:
+						if self.portmap.get((this_dpid, packet.src, packet.dst, udpp.srcport)):
+							new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.srcport)]
+							out = self.adjacency[this_dpid][new_dpid]
 
-					elif self.portmap.get((this_dpid, packet.src, packet.dst, udpp.dstport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.dstport)]
-						out = self.adjacency[this_dpid][new_dpid]
+						elif self.portmap.get((this_dpid, packet.src, packet.dst, udpp.dstport)):
+							new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.dstport)]
+							out = self.adjacency[this_dpid][new_dpid]
 
-					else:
-						out = self.hostmap_portmap[str(packet.dst)]
+						else:
+							out = self.hostmap_portmap[str(packet.dst)]
+						
+						install_fwdrule(event, packet, out)
 					
-					install_fwdrule(event, packet, out)
-				
+					else:
+						flood()
 				else:
 					flood()
 
