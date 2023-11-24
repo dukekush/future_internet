@@ -137,32 +137,36 @@ class CustomSlice (EventMixin):
 					packet.dst, dpid_to_str(event.dpid), event.port)
 
 			try:
-				if packet.type == 2054:
-					log.debug(f"Got ARP on the switch: {this_dpid}")
-					flood()
+				if tcpp:
+					if self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.srcport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.srcport)]
+						out = self.adjacency[this_dpid][new_dpid]
 
-				elif packet.payload.protocol == 1:
-					log.debug("ICMP packet")
-					flood()
-
-				else:
-					if self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').srcport)]
-
-					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('tcp').dstport)]
-
-					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('udp').srcport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('udp').srcport)]
-
-					elif self.portmap.get((this_dpid, packet.src, packet.dst, packet.find('udp').dstport)):
-						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, packet.find('udp').dstport)]
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, tcpp.dstport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, tcpp.dstport)]
+						out = self.adjacency[this_dpid][new_dpid]
 
 					else:
-						raise AttributeError
+						out = self.hostmap_portmap[str(packet.dst)]
+					
+					install_fwdrule(event, packet, out)
 				
+				elif udpp:
+					if self.portmap.get((this_dpid, packet.src, packet.dst, udpp.srcport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.srcport)]
+						out = self.adjacency[this_dpid][new_dpid]
 
-					install_fwdrule(event, packet, self.adjacency[this_dpid][new_dpid])
+					elif self.portmap.get((this_dpid, packet.src, packet.dst, udpp.dstport)):
+						new_dpid = self.portmap[(this_dpid, packet.src, packet.dst, udpp.dstport)]
+						out = self.adjacency[this_dpid][new_dpid]
+
+					else:
+						out = self.hostmap_portmap[str(packet.dst)]
+					
+					install_fwdrule(event, packet, out)
+				
+				else:
+					flood()
 
 			except AttributeError:
 				log.debug("packet type has no transport ports, flooding")
