@@ -289,7 +289,7 @@ control IngressPipeImpl(inout parsed_headers_t    hdr,
                         drop;       // Action to drop the packet
                 }
                 default_action = drop(); // Set drop as the default action
-                size = <desired_size>;   // Specify the size of the table
+                //size = 1024;   // Specify the size of the table
         }
 
 
