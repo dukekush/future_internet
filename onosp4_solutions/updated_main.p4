@@ -115,6 +115,16 @@ parser ParserImpl (packet_in packet,
                 transition parse_ethernet;
         }
 
+        /*
+                Exercise 2 TO-DO: Perform three changes to the parse_ethernet
+                state:
+                1. Create a transition selection based on the ether_type field
+                   of the ethernet header
+                2. For IPv4 packets, transition to the parse_ipv4 state
+                3. For ARP packets, trasition to the parse_arp state.
+                Note: Leave the parse_ipv4 state as default transition
+        */
+
         
         state parse_ethernet {
                 packet.extract(hdr.ethernet);
@@ -131,12 +141,18 @@ parser ParserImpl (packet_in packet,
                 transition accept;
         }
 
-        
+        /*
+                Exercise 2 TO-DO: Define the parse_arp state which should
+                perform the following two things:
+                1. Extract the arp header from the packet
+                2. Create a transition selection based on the ARP Operation
+                   code in such a way that only ARP requestes get accepted
+        */
+
         state parse_arp {
                 packet.extract(hdr.arp);
                 transition select(hdr.arp.oper) {
                         ARP_OPER_REQUEST: accept;
-                        default: reject;
                 }
         }
 }
@@ -247,26 +263,26 @@ control IngressPipeImpl(inout parsed_headers_t    hdr,
 
 
         action arp_reply(mac_addr_t request_mac) {
-        // Set the operation code to ARP reply
-        hdr.arp.oper = ARP_OPER_REPLY;
+                // Set the operation code to ARP reply
+                hdr.arp.oper = ARP_OPER_REPLY;
 
-        // Set the Target Hardware Address to the Source MAC address from the request
-        hdr.arp.tha = hdr.arp.sha;
+                // Set the Target Hardware Address to the Source MAC address from the request
+                hdr.arp.tha = hdr.arp.sha;
 
-        // Set the Source Hardware Address to the MAC address provided by the table match
-        hdr.arp.sha = request_mac;
+                // Set the Source Hardware Address to the MAC address provided by the table match
+                hdr.arp.sha = request_mac;
 
-        // Set the Source Protocol Address to the Target Protocol Address from the request
-        hdr.arp.spa = hdr.arp.tpa;
+                // Set the Source Protocol Address to the Target Protocol Address from the request
+                hdr.arp.spa = hdr.arp.tpa;
 
-        // Set the Ethernet header's destination address to its source address
-        hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;
+                // Set the Ethernet header's destination address to its source address
+                hdr.ethernet.dst_addr = hdr.ethernet.src_addr;
 
-        // Set the Ethernet header's source address to the MAC address provided by the table match
-        hdr.ethernet.srcAddr = request_mac;
+                // Set the Ethernet header's source address to the MAC address provided by the table match
+                hdr.ethernet.src_addr = request_mac;
 
-        // Return the reply to the same port where it came from
-        standard_metadata.egress_spec = standard_metadata.ingress_port;
+                // Return the reply to the same port where it came from
+                standard_metadata.egress_spec = standard_metadata.ingress_port;
         }
 
 
@@ -325,7 +341,6 @@ control IngressPipeImpl(inout parsed_headers_t    hdr,
                 if (hdr.ethernet.isValid() && hdr.ipv4.isValid()) {
                         l2_exact_table.apply(); // Apply l2_exact_table for IPv4 packets
                 } else if (hdr.ethernet.isValid() && hdr.ethernet.ether_type == ETHERTYPE_ARP) {
-                        // Check if it's an Ethernet frame containing ARP
                         arp_exact.apply(); // Apply arp_exact table for ARP requests
                 }
 
@@ -385,19 +400,12 @@ control DeparserImpl(packet_out packet, in parsed_headers_t hdr) {
                 modify this method to emit a packet containing an ipv4
                 header.
         */
-
-                if (hdr.ipv4.isValid()) {
                 packet.emit(hdr.ipv4);
-                }
-
         /*
                 Exercise 2 TO-DO: Include the ARP header in outgoing packets
                 where applicable
         */
-                if (hdr.arp.isValid()) {
                 packet.emit(hdr.arp);
-                }
-
         }
 }
 
@@ -414,4 +422,4 @@ V1Switch(
         EgressPipeImpl(),
         ComputeChecksumImpl(),
         DeparserImpl()
-) main
+) main;
